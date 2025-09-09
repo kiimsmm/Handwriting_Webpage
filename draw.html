@@ -1,228 +1,314 @@
-<!-- draw.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>직접 손글씨 쓰기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        html, body {
-            overscroll-behavior: contain;  /* 펜 스크롤 튐 방지 */
-            user-select: none;             /* 텍스트 선택 방지 */
+        :root{
+            --fh-navy:#002147;
+            --fh-navy-2:#07305a;
+            --fh-muted:#6c757d;
+            --fh-border:#dfe3e7;
+            --fh-ring:#7aa7ff;
         }
-        canvas {
-            touch-action: none;            /* 캔버스 위 제스처 무력화 */
+        body{
+            background: linear-gradient(180deg, #f6f9ff 0%, #eef3ff 50%, #f7faff 100%);
+        }
+        .fh-navbar{
+            background: linear-gradient(90deg, #002147, #00bfa6, #07305a);
+            background-size: 200% 200%;
+            animation: navbarGradient 17s ease-in-out infinite alternate;
+        }
+        @keyframes navbarGradient{
+            0%{ background-position: 0 50%; }
+            100%{ background-position: 100% 50%; }
+        }
+        .fh-brand{ letter-spacing:.2px; }
+
+        .fh-footer{
+            position: fixed;
+            left: 20px;
+            bottom: 10px;
+            color: #a0a9b3;
+            font-size: .9rem;
+        }
+
+        .canvas-wrap {
             border: 2px dashed #ced4da;
             border-radius: 10px;
+            display: inline-block; /* 크기를 캔버스에 맞게 */
+        }
+
+        canvas {
+            touch-action: none;
+            background: #fff;
+            border: none;
         }
     </style>
+    <link rel="icon" href="images/icon_32.png?v=4" type="image/png" sizes="32x32">
+    <link rel="shortcut icon" href="images/icon_32.png?v=4" type="image/png">
 </head>
 <body class="bg-light text-center">
-<nav class="navbar navbar-expand-lg" style="background-color: #002147;">
-    <div class="container-fluid justify-content-center py-2">
-        <span class="navbar-brand text-white fw-bold fs-3 mb-0">FontHacker</span>
+<nav class="navbar fh-navbar py-3">
+    <div class="container-fluid justify-content-center text-center">
+        <div>
+            <div class="text-white fw-bold fs-3 fh-brand">FontHacker</div>
+        </div>
     </div>
 </nav>
+<footer class="fh-footer">© 2025 FontHacker</footer>
 
 <div class="container py-5">
     <h2 id="stepTitle" class="mb-3">A를 써주세요</h2>
-
     <div class="d-flex justify-content-center">
-        <canvas id="canvasOne" width="1600" height="360" style="width: 1600px; height: 360px;"></canvas>
+        <div class="canvas-wrap">
+            <canvas id="canvasOne" width="2000" height="600" style="width:1600px;height:360px;"></canvas>
+        </div>
     </div>
-
     <div class="d-flex justify-content-center gap-2 mt-3">
-        <button class="btn btn-outline-secondary btn-sm" onclick="clearCanvas('canvasOne')">지우기</button>
-        <button id="nextBtn" class="btn btn-primary" onclick="captureAndNext()">다음(B)</button>
-        <button id="submitBtn" class="btn btn-success" onclick="submitSingleFlow()" disabled>제출</button>
+        <button class="btn btn-outline-secondary btn-sm" id="clearBtn">지우기</button>
+        <button id="nextBtn" class="btn btn-primary">다음(B)</button>
     </div>
 </div>
 
 <script>
+    // ===== DPI 스케일 적용 (좌표계는 CSS 픽셀로 유지) =====
+    function applyDpiScale(canvas){
+        const dpr  = window.devicePixelRatio || 1;
+        const cssW = Math.round(parseFloat(getComputedStyle(canvas).width));
+        const cssH = Math.round(parseFloat(getComputedStyle(canvas).height));
+        canvas.width  = Math.max(1, Math.round(cssW * dpr));
+        canvas.height = Math.max(1, Math.round(cssH * dpr));
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 이후 모든 그리기는 CSS 좌표계로
+        ctx.clearRect(0, 0, cssW, cssH);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cssW, cssH);
+    }
 
-    function applyDpiScale(canvas) {
-        const dpr = window.devicePixelRatio || 1;
-        const cssW = parseInt(getComputedStyle(canvas).width, 10);
-        const cssH = parseInt(getComputedStyle(canvas).height, 10);
-        canvas.width  = Math.round(cssW * dpr);
-        canvas.height = Math.round(cssH * dpr);
+    // ===== 캔버스 지우기 (CSS 좌표 사용) =====
+    function clearCanvas(canvas){
+        const ctx  = canvas.getContext('2d');
+        const cssW = Math.round(parseFloat(getComputedStyle(canvas).width));
+        const cssH = Math.round(parseFloat(getComputedStyle(canvas).height));
+        ctx.clearRect(0, 0, cssW, cssH);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cssW, cssH);
+    }
+
+    // ===== 안전 리사이즈: 잉크 보존 =====
+    function resizePreserve(canvas){
+        const dpr  = window.devicePixelRatio || 1;
+        const cssW = Math.round(parseFloat(getComputedStyle(canvas).width));
+        const cssH = Math.round(parseFloat(getComputedStyle(canvas).height));
+
+        const backup = document.createElement('canvas');
+        backup.width  = canvas.width;
+        backup.height = canvas.height;
+        const bctx = backup.getContext('2d');
+        bctx.drawImage(canvas, 0, 0);
+
+        canvas.width  = Math.max(1, Math.round(cssW * dpr));
+        canvas.height = Math.max(1, Math.round(cssH * dpr));
         const ctx = canvas.getContext('2d');
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, cssW, cssH);
+        ctx.drawImage(backup, 0, 0, backup.width, backup.height, 0, 0, cssW, cssH);
     }
 
-    function enableDrawing(canvasId) {
-        const canvas = document.getElementById(canvasId);
-        const ctx = canvas.getContext("2d");
+    // ===== 백/그레이 PNG DataURL (CSS 크기 고정 출력) =====
+    function canvasToWhiteGrayDataURL(canvas){
+        const cssW = Math.round(parseFloat(getComputedStyle(canvas).width));
+        const cssH = Math.round(parseFloat(getComputedStyle(canvas).height));
+        const off  = document.createElement('canvas');
+        off.width  = cssW;  // CSS 크기 기준으로 내보내기
+        off.height = cssH;
+        const octx = off.getContext('2d');
 
-        // 초기 흰 배경
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        octx.fillStyle = '#ffffff';
+        octx.fillRect(0, 0, cssW, cssH);
+        octx.drawImage(canvas, 0, 0, cssW, cssH);
 
-        // 민감도 파라미터
-        const MIN_PRESSURE = 0.10;
-        const DEADZONE_PX  = 1.0;
-        const SMOOTHING    = 0.25;
-        const CONTACT_MS   = 30;
-        const MIN_LINE_W   = 2;
-        const MAX_LINE_W   = 6;
-
-        let drawing = false;
-        let confirming = false;
-        let confirmTimer = null;
-        let lastX = 0, lastY = 0;
-
-        canvas.addEventListener("contextmenu", e => e.preventDefault());
-
-        canvas.addEventListener("pointerdown", (e) => {
-            if (e.target !== canvas) return;
-            if (e.pointerType !== 'pen') return;
-            if (!(e.buttons & 1) || e.button !== 0) return;
-            if ((e.pressure || 0) < MIN_PRESSURE) return;
-
-            e.preventDefault(); // 제스처 차단
-            canvas.setPointerCapture?.(e.pointerId);
-
-            const r = canvas.getBoundingClientRect();
-            lastX = e.clientX - r.left;
-            lastY = e.clientY - r.top;
-
-            confirming = true;
-            confirmTimer = window.setTimeout(() => {
-                if ((e.buttons & 1) && (e.pressure || 0) >= MIN_PRESSURE) {
-                    drawing = true;
-                }
-                confirming = false;
-            }, CONTACT_MS);
-        }, { passive: false });   // ← 중요
-
-        canvas.addEventListener("pointermove", (e) => {
-            if (e.target !== canvas) return;
-            if (e.pointerType !== 'pen') return;
-            e.preventDefault();
-
-            const r = canvas.getBoundingClientRect();
-            let x = e.clientX - r.left;
-            let y = e.clientY - r.top;
-
-            if (confirming) {
-                if (!(e.buttons & 1) || (e.pressure || 0) < MIN_PRESSURE) {
-                    window.clearTimeout(confirmTimer);
-                    confirming = false;
-                }
-                return;
-            }
-
-            if (!drawing) return;
-            if (!(e.buttons & 1) || (e.pressure || 0) < MIN_PRESSURE) return;
-
-            const dx = x - lastX, dy = y - lastY;
-            if (Math.hypot(dx, dy) < DEADZONE_PX) return;
-
-            x = lastX + (x - lastX) * (1 - SMOOTHING);
-            y = lastY + (y - lastY) * (1 - SMOOTHING);
-
-            const p = Math.max(MIN_PRESSURE, Math.min(1, e.pressure || 0.5));
-            const w = MIN_LINE_W + (MAX_LINE_W - MIN_LINE_W) * p;
-
-            ctx.lineWidth = w;
-            ctx.lineCap = "round";
-            ctx.lineJoin = "round";
-            ctx.strokeStyle = "#000";
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-
-            lastX = x; lastY = y;
-        }, { passive: false });   // ← 중요
-
-        const endStroke = (e) => {
-            if (confirming) {
-                window.clearTimeout(confirmTimer);
-                confirming = false;
-            }
-            if (drawing) {
-                try { canvas.releasePointerCapture?.(e.pointerId); } catch {}
-            }
-            drawing = false;
-        };
-        canvas.addEventListener("pointerup", endStroke, { passive: false });
-        canvas.addEventListener("pointercancel", endStroke, { passive: false });
-        canvas.addEventListener("pointerleave", endStroke, { passive: false });
-    }
-
-    function clearCanvas(id) {
-        const canvas = document.getElementById(id);
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // 흰 배경 + 흑백 변환 후 DataURL
-    function canvasToWhiteGrayDataURL(canvas) {
-        const off = document.createElement("canvas");
-        off.width = canvas.width;
-        off.height = canvas.height;
-        const octx = off.getContext("2d");
-
-        octx.fillStyle = "#ffffff";
-        octx.fillRect(0, 0, off.width, off.height);
-        octx.drawImage(canvas, 0, 0);
-
-        const imgData = octx.getImageData(0, 0, off.width, off.height);
+        const imgData = octx.getImageData(0, 0, cssW, cssH);
         const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < data.length; i += 4){
             const r = data[i], g = data[i+1], b = data[i+2];
             const gray = 0.299*r + 0.587*g + 0.114*b;
             data[i] = data[i+1] = data[i+2] = gray;
         }
         octx.putImageData(imgData, 0, 0);
-
-        return off.toDataURL("image/png");
+        return off.toDataURL('image/png');
     }
 
-    let currentStep = 'A';
-    let capturedA = null; // DataURL 저장
+    // ===== 유틸 =====
+    function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+    function lerp(a,b,t){ return a + (b-a)*t; }
 
-    // A 또는 B 캡처 후 다음 단계/제출
-    function captureAndNext() {
+    function toCanvasUserSpace(canvas, ctx, clientX, clientY){
+        const rect = canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        if (typeof ctx.getTransform === 'function'){
+            try{
+                const inv = ctx.getTransform().invertSelf();
+                const p = new DOMPoint(x, y).matrixTransform(inv);
+                return { x: p.x, y: p.y };
+            }catch{}
+        }
+        const cssW = parseFloat(getComputedStyle(canvas).width);
+        const cssH = parseFloat(getComputedStyle(canvas).height);
+        const scaleX = cssW / rect.width;
+        const scaleY = cssH / rect.height;
+        return { x: x * scaleX, y: y * scaleY };
+    }
+
+    // ===== 펜/마우스/터치 드로잉 =====
+    function enableDrawingLite(canvas){
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        // GAIN 파라미터
+        const INPUT_GAIN  = 0.87; // 낮을수록 글씨가 작아짐
+        const WIDTH_GAIN  = 0.95; // 0.5~1.2; 선 두께 전체 배율
+        const MIN_PRESS   = 0.04;
+        const DEADZONE    = 0.5;  // 미세 떨림 무시
+
+        // 선 두께(속도+압력) 파라미터
+        const MIN_W = 3.0 * WIDTH_GAIN;
+        const MAX_W = 6.2 * WIDTH_GAIN;
+        const VMIN  = 0.06;
+        const VMAX  = 1.8;
+
+        let drawing = false;
+        let last = null; // {x,y,t,pressure,v}
+
+        function pressureToW(p, v){
+            const nv = clamp((v - VMIN) / (VMAX - VMIN), 0, 1);
+            const base = lerp(MAX_W, MIN_W, nv); // 빠르면 얇게
+            return clamp(base * (0.65 + 0.45 * clamp(p, 0, 1)), MIN_W, MAX_W);
+        }
+
+        function addAndStroke(nx, ny, t, p){
+            const nowPt = { x: nx, y: ny, t, pressure: p, v: 0 };
+            if (last){
+                const dt = Math.max(1e-3, (t - last.t) / 1000);
+                const v  = Math.hypot(nx - last.x, ny - last.y) / dt;
+                nowPt.v = v;
+
+                if (Math.hypot(nx - last.x, ny - last.y) >= DEADZONE){
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = pressureToW(nowPt.pressure, nowPt.v);
+                    ctx.beginPath();
+                    ctx.moveTo(last.x, last.y);
+                    ctx.lineTo(nowPt.x, nowPt.y);
+                    ctx.stroke();
+                    last = nowPt;
+                }
+            }else{
+                last = nowPt;
+            }
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (e.target !== canvas) return;
+            // 왼클릭/펜/터치만 허용
+            if (!(e.pointerType === 'mouse' ? e.button === 0 : true)) return;
+
+            const p = (e.pressure === 0 ? 0.5 : (e.pressure || 0.5));
+            if (p < MIN_PRESS && e.pointerType === 'pen'){ /* 펜 최소압력 무시 가능 */ }
+
+            e.preventDefault();
+            canvas.setPointerCapture?.(e.pointerId);
+
+            const pt = toCanvasUserSpace(canvas, ctx, e.clientX, e.clientY);
+            drawing = true;
+            last = null; // 새 스트로크 시작
+            addAndStroke(pt.x, pt.y, performance.now(), p);
+        }, { passive: false });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!drawing) return;
+            if (e.target !== canvas) return;
+            e.preventDefault();
+
+            const list = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+            const now  = performance.now();
+
+            for (const ev of list){
+                const p = (ev.pressure === 0 ? 0.5 : (ev.pressure || 0.5));
+                const pt = toCanvasUserSpace(canvas, ctx, ev.clientX, ev.clientY);
+                if (last){
+                    const x = last.x + (pt.x - last.x) * INPUT_GAIN;
+                    const y = last.y + (pt.y - last.y) * INPUT_GAIN;
+                    addAndStroke(x, y, now, p);
+                }else{
+                    addAndStroke(pt.x, pt.y, now, p);
+                }
+            }
+        }, { passive: false });
+
+        function end(e){
+            if (!drawing) return;
+            if (last){
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(last.x, last.y, Math.max(1.5, ctx.lineWidth * 0.5), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            drawing = false;
+            try{ canvas.releasePointerCapture?.(e.pointerId); }catch{}
+        }
+        canvas.addEventListener('pointerup', end, { passive: false });
+        canvas.addEventListener('pointercancel', end, { passive: false });
+        canvas.addEventListener('pointerleave', end, { passive: false });
+    }
+
+    // ===== 흐름 제어(A→B→result.html) =====
+    let currentStep = 'A';
+    let capturedA = null;
+
+    function captureAndNext(){
         const c = document.getElementById('canvasOne');
         const data = canvasToWhiteGrayDataURL(c);
 
-        if (currentStep === 'A') {
+        if (currentStep === 'A'){
             capturedA = data;
-            // 캔버스 초기화
-            clearCanvas('canvasOne');
-            // 라벨 변경
+            clearCanvas(c);
             document.getElementById('stepTitle').innerText = 'B를 써주세요';
-            // 버튼 상태
-            document.getElementById('nextBtn').classList.replace('btn-primary','btn-secondary');
-            document.getElementById('nextBtn').setAttribute('disabled', 'disabled'); // B는 한 번만 캡처하도록
-            document.getElementById('submitBtn').removeAttribute('disabled');
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.textContent = '완료';
+            nextBtn.classList.remove('btn-primary');
+            nextBtn.classList.add('btn-success');
             currentStep = 'B';
+        }else if (currentStep === 'B'){
+            localStorage.setItem('handwritingImageA', capturedA);
+            localStorage.setItem('handwritingImageB', data);
+            window.location.href = 'result.html';
         }
     }
 
-    // 최종 제출 (A= capturedA, B= 현재 캔버스)
-    function submitSingleFlow() {
-        const c = document.getElementById('canvasOne');
-        const dataB = canvasToWhiteGrayDataURL(c);
-
-        // 스토리지 저장(기존 result.html 흐름 재사용)
-        localStorage.setItem("handwritingImageA", capturedA);
-        localStorage.setItem("handwritingImageB", dataB);
-
-        window.location.href = "result.html";
-    }
-
+    // ===== 초기화 =====
     const canvas = document.getElementById('canvasOne');
     applyDpiScale(canvas);
-    enableDrawing('canvasOne');
+    enableDrawingLite(canvas);
 
+    document.getElementById('clearBtn').addEventListener('click', () => clearCanvas(canvas));
+    document.getElementById('nextBtn').addEventListener('click', captureAndNext);
+
+    let resizeRAF = null;
+    window.addEventListener('resize', () => {
+        if (resizeRAF) cancelAnimationFrame(resizeRAF);
+        resizeRAF = requestAnimationFrame(() => {
+            resizePreserve(canvas);
+        });
+    });
 </script>
 </body>
 </html>
