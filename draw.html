@@ -172,14 +172,14 @@
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         // GAIN 파라미터
-        const INPUT_GAIN  = 0.87; // 낮을수록 글씨가 작아짐
-        const WIDTH_GAIN  = 0.95; // 0.5~1.2; 선 두께 전체 배율
-        const MIN_PRESS   = 0.04;
-        const DEADZONE    = 0.5;  // 미세 떨림 무시
+        const INPUT_GAIN  = 0.875; // 낮을수록 글씨가 작아짐
+        const WIDTH_GAIN  = 0.98; // 0.5~1.2; 선 두께 전체 배율
+        const MIN_PRESS   = 0.045;
+        const DEADZONE    = 0.55;  // 미세 떨림 무시
 
         // 선 두께(속도+압력) 파라미터
-        const MIN_W = 3.0 * WIDTH_GAIN;
-        const MAX_W = 6.2 * WIDTH_GAIN;
+        const MIN_W = 3.6 * WIDTH_GAIN;
+        const MAX_W = 7.2 * WIDTH_GAIN;
         const VMIN  = 0.06;
         const VMAX  = 1.8;
 
