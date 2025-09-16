@@ -46,6 +46,13 @@
             background: #fff;
             border: none;
         }
+
+        .handwrite-canvas{
+            width: min(92vw, 1200px);          /* 화면에 맞춰 가로 */
+            height: clamp(420px, 40vw, 560px); /* 세로를 충분히 확보 */
+            background:#fff;
+            border:none;
+        }
     </style>
     <link rel="icon" href="images/icon_32.png?v=4" type="image/png" sizes="32x32">
     <link rel="shortcut icon" href="images/icon_32.png?v=4" type="image/png">
@@ -64,7 +71,7 @@
     <h2 id="stepTitle" class="mb-3">A를 써주세요</h2>
     <div class="d-flex justify-content-center">
         <div class="canvas-wrap">
-            <canvas id="canvasOne" width="2000" height="600" style="width:1600px;height:360px;"></canvas>
+            <canvas id="canvasOne" class="handwrite-canvas"></canvas>
         </div>
     </div>
     <div class="d-flex justify-content-center gap-2 mt-3">
@@ -172,14 +179,15 @@
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         // GAIN 파라미터
-        const INPUT_GAIN  = 0.875; // 낮을수록 글씨가 작아짐
-        const WIDTH_GAIN  = 0.98; // 0.5~1.2; 선 두께 전체 배율
+        const INPUT_GAIN_X  = 0.865; // 낮을수록 글씨가 작아짐
+        const INPUT_GAIN_Y  = 0.945; // 낮을수록 글씨가 작아짐
+        const WIDTH_GAIN  = 0.97; // 0.5~1.2; 선 두께 전체 배율
         const MIN_PRESS   = 0.045;
         const DEADZONE    = 0.55;  // 미세 떨림 무시
 
         // 선 두께(속도+압력) 파라미터
-        const MIN_W = 3.6 * WIDTH_GAIN;
-        const MAX_W = 7.2 * WIDTH_GAIN;
+        const MIN_W = 3.9 * WIDTH_GAIN;
+        const MAX_W = 7.8 * WIDTH_GAIN;
         const VMIN  = 0.06;
         const VMAX  = 1.8;
 
@@ -245,8 +253,8 @@
                 const p = (ev.pressure === 0 ? 0.5 : (ev.pressure || 0.5));
                 const pt = toCanvasUserSpace(canvas, ctx, ev.clientX, ev.clientY);
                 if (last){
-                    const x = last.x + (pt.x - last.x) * INPUT_GAIN;
-                    const y = last.y + (pt.y - last.y) * INPUT_GAIN;
+                    const x = last.x + (pt.x - last.x) * INPUT_GAIN_X;
+                    const y = last.y + (pt.y - last.y) * INPUT_GAIN_Y;
                     addAndStroke(x, y, now, p);
                 }else{
                     addAndStroke(pt.x, pt.y, now, p);
