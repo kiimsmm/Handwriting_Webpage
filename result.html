@@ -1,4 +1,4 @@
-<!-- 개선된 result.html (실제 fetch 완료 시 로딩 종료) -->
+<!-- result.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -26,6 +26,22 @@
             0%{ background-position: 0 50%; }
             100%{ background-position: 100% 50%; }
         }
+
+        .loading-wrap {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+            padding-top: 5vh;
+        }
+
+        .loading-wrap p {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #333;
+        }
+
         .fh-brand{ letter-spacing:.2px; }
 
         .fh-footer{
@@ -154,10 +170,10 @@
 </nav>
 <footer class="fh-footer">© 2025 FontHacker</footer>
 <div class="container py-5 text-center">
-  <div id="loading">
-    <div class="spinner-border text-primary mb-3" role="status"></div>
-    <p class="fs-5">AI가 손글씨를 분석 중입니다...</p>
-  </div>
+    <div class="loading-wrap">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <p>AI가 손글씨를 분석 중입니다...</p>
+    </div>
 
   <div id="result-content" class="d-none">
     <div class="result-card mx-auto" style="max-width: 800px;">
@@ -169,7 +185,6 @@
       <p id="score" class="fs-5 fw-semibold text-primary"></p>
       <p id="judgment" class="fs-5"></p>
       <div class="mt-4">
-        <a href="details.html" class="btn rounded-pill" style="background-color: #6f42c1; color: white;">상세 분석 보기</a>
         <a href="index.html" class="btn btn-success rounded-pill ms-2">다시 분석하기</a>
       </div>
     </div>
