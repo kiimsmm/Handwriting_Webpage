@@ -1,7 +1,4 @@
 <!-- index.html -->
-<!-- index.html -->
-<!-- 수정 대상: index.html 개선안 -->
-<!-- 목표: 이미지 업로드 시 이미지 미리보기 표시 + 드래그 앤 드롭 기능 추가 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -145,12 +142,12 @@
     <div class="fh-section text-center">
         <p class="lead mb-4">손글씨 이미지를 업로드 하세요</p>
         <p class="lead mb-4"></p>
-        <div class="d-flex justify-content-center gap-4 flex-wrap">
+        <div class="d-flex justify-content-center flex-wrap gap-5 upload-row">
             <!-- 카드 A -->
             <div class="upload-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-wrap gap-4">
                     <span class="badge bg-primary-subtle text-primary border badge-ab">A</span>
-                    <small class="text-secondary">PNG</small>
+                    <small class="text-secondary"></small>
                 </div>
                 <div class="upload-box mt-2" id="box1"
                      ondrop="dropHandler(event, 'file1')"
@@ -168,9 +165,9 @@
 
             <!-- 카드 B -->
             <div class="upload-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-wrap gap-4">
                     <span class="badge bg-success-subtle text-success border badge-ab">B</span>
-                    <small class="text-secondary">PNG</small>
+                    <small class="text-secondary"></small>
                 </div>
                 <div class="upload-box mt-2" id="box2"
                      ondrop="dropHandler(event, 'file2')"
@@ -188,7 +185,7 @@
         </div>
 
         <!-- 액션 -->
-        <div class="fh-actions d-flex justify-content-center gap-3 mt-4">
+        <div class="fh-actions d-flex justify-content-center gap-5 mt-4">
             <button class="btn btn-success rounded-pill btn-lg" onclick="startAnalysis()">분석 시작</button>
             <a href="draw.html" class="btn btn-outline-dark rounded-pill btn-lg">직접 손글씨 쓰기</a>
         </div>
