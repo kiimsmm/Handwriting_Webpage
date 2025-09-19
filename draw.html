@@ -25,7 +25,7 @@
             0%{ background-position: 0 50%; }
             100%{ background-position: 100% 50%; }
         }
-        .fh-brand{ letter-spacing:.2px; }
+        .fh-brand{ letter-spacing: 0.1em; }
 
         .fh-footer{
             position: fixed;
@@ -48,14 +48,16 @@
         }
 
         .handwrite-canvas{
-            width: min(92vw, 1200px);          /* 화면에 맞춰 가로 */
-            height: clamp(435px, 40vw, 560px); /* 세로를 충분히 확보 */
+            width: min(88vw, 1320px);          /* 가로 크기*/
+            height: clamp(150px, 15vw, 150px); /* 세로 크기*/
             background:#fff;
             border:none;
         }
     </style>
     <link rel="icon" href="images/icon_32.png?v=4" type="image/png" sizes="32x32">
+    <link rel="icon" href="images/icon_64.png?v=4" type="image/png" sizes="64x64" >
     <link rel="shortcut icon" href="images/icon_32.png?v=4" type="image/png">
+    <link rel="shortcut icon" href="images/icon_64.png?v=4" type="image/png">
 </head>
 <body class="bg-light text-center">
 <nav class="navbar fh-navbar py-3">
@@ -151,57 +153,48 @@
         return off.toDataURL('image/png');
     }
 
-    // ===== 유틸 =====
-    function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-    function lerp(a,b,t){ return a + (b-a)*t; }
-
-    function toCanvasUserSpace(canvas, ctx, clientX, clientY){
+    function toCanvasUserSpace(canvas, ctx, clientX, clientY, rawEvent){
+        if (rawEvent && typeof rawEvent.offsetX === 'number') {
+            return { x: rawEvent.offsetX, y: rawEvent.offsetY };
+        }
         const rect = canvas.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
-
-        if (typeof ctx.getTransform === 'function'){
-            try{
-                const inv = ctx.getTransform().invertSelf();
-                const p = new DOMPoint(x, y).matrixTransform(inv);
-                return { x: p.x, y: p.y };
-            }catch{}
-        }
         const cssW = parseFloat(getComputedStyle(canvas).width);
         const cssH = parseFloat(getComputedStyle(canvas).height);
-        const scaleX = cssW / rect.width;
-        const scaleY = cssH / rect.height;
-        return { x: x * scaleX, y: y * scaleY };
+        return { x: x * (cssW/rect.width), y: y * (cssH/rect.height) };
     }
 
     // ===== 펜/마우스/터치 드로잉 =====
     function enableDrawingLite(canvas){
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-        // GAIN 파라미터
-        const INPUT_GAIN_X  = 0.865; // 낮을수록 글씨가 작아짐
-        const INPUT_GAIN_Y  = 0.945; // 낮을수록 글씨가 작아짐
-        const WIDTH_GAIN  = 0.97; // 0.5~1.2; 선 두께 전체 배율
-        const MIN_PRESS   = 0.045;
-        const DEADZONE    = 0.55;  // 미세 떨림 무시
+        // ── 파라미터
+        const INPUT_GAIN_X = 0.905;
+        const INPUT_GAIN_Y = 0.97;
+        const WIDTH_GAIN   = 0.975;
+        const DEADZONE     = 0.385;
 
-        // 선 두께(속도+압력) 파라미터
-        const MIN_W = 3.9 * WIDTH_GAIN;
-        const MAX_W = 7.8 * WIDTH_GAIN;
-        const VMIN  = 0.06;
-        const VMAX  = 1.8;
+        const MIN_W = 4.1 * WIDTH_GAIN;
+        const MAX_W = 8.2 * WIDTH_GAIN;
+        const VMIN  = 0.05;
+        const VMAX  = 1.6;
 
         let drawing = false;
-        let last = null; // {x,y,t,pressure,v}
+        let last = null;
+        let useRaw = false;
+
+        const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+        const lerp  = (a,b,t)=>a+(b-a)*t;
 
         function pressureToW(p, v){
             const nv = clamp((v - VMIN) / (VMAX - VMIN), 0, 1);
-            const base = lerp(MAX_W, MIN_W, nv); // 빠르면 얇게
+            const base = lerp(MAX_W, MIN_W, nv);      // 빠르면 얇게
             return clamp(base * (0.65 + 0.45 * clamp(p, 0, 1)), MIN_W, MAX_W);
         }
 
         function addAndStroke(nx, ny, t, p){
-            const nowPt = { x: nx, y: ny, t, pressure: p, v: 0 };
+            const nowPt = { x:nx, y:ny, t, pressure:p, v:0 };
             if (last){
                 const dt = Math.max(1e-3, (t - last.t) / 1000);
                 const v  = Math.hypot(nx - last.x, ny - last.y) / dt;
@@ -219,63 +212,65 @@
                     ctx.stroke();
                     last = nowPt;
                 }
-            }else{
+            } else {
                 last = nowPt;
+            }
+        }
+
+        function handleMoveLike(e){
+            if (!drawing || e.target !== canvas) return;
+            e.preventDefault();
+
+            // rawUpdate가 한 번이라도 들어오면 move는 무시(이중 그리기 방지)
+            if (!useRaw && e.type === 'pointerRawUpdate') useRaw = true;
+            if (useRaw && e.type === 'pointermove') return;
+
+            const now = performance.now();
+            const p   = (e.pressure === 0 ? 0.5 : (e.pressure || 0.5));
+            const pt  = toCanvasUserSpace(canvas, ctx, e.clientX, e.clientY, e);
+
+            if (last){
+                const x = last.x + (pt.x - last.x) * INPUT_GAIN_X;
+                const y = last.y + (pt.y - last.y) * INPUT_GAIN_Y;
+                addAndStroke(x, y, now, p);
+            } else {
+                addAndStroke(pt.x, pt.y, now, p);
             }
         }
 
         canvas.addEventListener('pointerdown', (e) => {
             if (e.target !== canvas) return;
-            // 왼클릭/펜/터치만 허용
             if (!(e.pointerType === 'mouse' ? e.button === 0 : true)) return;
-
             const p = (e.pressure === 0 ? 0.5 : (e.pressure || 0.5));
-            if (p < MIN_PRESS && e.pointerType === 'pen'){ /* 펜 최소압력 무시 가능 */ }
 
             e.preventDefault();
+            useRaw = false;                // 새 스트로크마다 초기화
             canvas.setPointerCapture?.(e.pointerId);
 
-            const pt = toCanvasUserSpace(canvas, ctx, e.clientX, e.clientY);
+            const pt = toCanvasUserSpace(canvas, ctx, e.clientX, e.clientY, e);
             drawing = true;
-            last = null; // 새 스트로크 시작
+            last = null;
+
+            // 시작점 즉시 한 픽셀 찍고 시작 → 커서와 시각적 오프셋 제거
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 1.25, 0, Math.PI*2);
+            ctx.fill();
+
             addAndStroke(pt.x, pt.y, performance.now(), p);
-        }, { passive: false });
+        }, { passive:false });
 
-        canvas.addEventListener('pointermove', (e) => {
-            if (!drawing) return;
-            if (e.target !== canvas) return;
-            e.preventDefault();
-
-            const list = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
-            const now  = performance.now();
-
-            for (const ev of list){
-                const p = (ev.pressure === 0 ? 0.5 : (ev.pressure || 0.5));
-                const pt = toCanvasUserSpace(canvas, ctx, ev.clientX, ev.clientY);
-                if (last){
-                    const x = last.x + (pt.x - last.x) * INPUT_GAIN_X;
-                    const y = last.y + (pt.y - last.y) * INPUT_GAIN_Y;
-                    addAndStroke(x, y, now, p);
-                }else{
-                    addAndStroke(pt.x, pt.y, now, p);
-                }
-            }
-        }, { passive: false });
+        canvas.addEventListener('pointermove',      handleMoveLike, { passive:false });
+        canvas.addEventListener('pointerRawUpdate', handleMoveLike, { passive:false });
 
         function end(e){
             if (!drawing) return;
-            if (last){
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(last.x, last.y, Math.max(1.5, ctx.lineWidth * 0.5), 0, Math.PI * 2);
-                ctx.fill();
-            }
             drawing = false;
             try{ canvas.releasePointerCapture?.(e.pointerId); }catch{}
         }
-        canvas.addEventListener('pointerup', end, { passive: false });
-        canvas.addEventListener('pointercancel', end, { passive: false });
-        canvas.addEventListener('pointerleave', end, { passive: false });
+        canvas.addEventListener('pointerup', end, { passive:false });
+        canvas.addEventListener('pointercancel', end, { passive:false });
+        canvas.addEventListener('pointerleave', end, { passive:false });
     }
 
     // ===== 흐름 제어(A→B→result.html) =====
