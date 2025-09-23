@@ -48,8 +48,8 @@
         }
 
         .handwrite-canvas{
-            width: min(88vw, 1320px);          /* 가로 크기*/
-            height: clamp(150px, 15vw, 150px); /* 세로 크기*/
+            width: min(72vw, 1300px);          /* 가로 크기*/
+            height: clamp(128px, 12vw, 128px); /* 세로 크기*/
             background:#fff;
             border:none;
         }
@@ -170,15 +170,15 @@
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         // ── 파라미터
-        const INPUT_GAIN_X = 0.905;
-        const INPUT_GAIN_Y = 0.97;
-        const WIDTH_GAIN   = 0.975;
+        const INPUT_GAIN_X = 0.88;
+        const INPUT_GAIN_Y = 0.965;
+        const WIDTH_GAIN   = 0.965;
         const DEADZONE     = 0.385;
 
-        const MIN_W = 4.1 * WIDTH_GAIN;
-        const MAX_W = 8.2 * WIDTH_GAIN;
+        const MIN_W = 3.9 * WIDTH_GAIN;
+        const MAX_W = 7.8 * WIDTH_GAIN;
         const VMIN  = 0.05;
-        const VMAX  = 1.6;
+        const VMAX  = 1.65;
 
         let drawing = false;
         let last = null;
