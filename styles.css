@@ -14,6 +14,9 @@ body{
     background: linear-gradient(90deg, #002147, #00bfa6, #07305a);
     background-size: 200% 200%;
     animation: navbarGradient 17s ease-in-out infinite alternate;
+
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
 }
 
 @keyframes navbarGradient {
@@ -24,8 +27,12 @@ body{
         background-position: 100% 50%;
     }
 }
-.fh-brand{
-    letter-spacing: 0.1em
+.fh-brand {
+    letter-spacing: 0.05em;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 750 !important; /* 부트스트랩 fw-bold(700)보다 더 굵게 */
+    line-height: 1;
+    padding-right: 2px;
 }
 
 .fh-container{
@@ -43,6 +50,12 @@ body{
 .fh-section:hover {
     box-shadow: 0 10px 18px rgba(0,0,0,.06); /* 그림자 약간 강조 */
     border-color: #e6ecf5; /* 테두리를 살짝 더 밝게 */
+}
+
+#stepTitle {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600; /* 글자를 좀 더 굵게 하여 시인성 확보 */
+    color: var(--fh-navy); /* 네이비 색상으로 깔끔하게 */
 }
 
 .upload-card{
