@@ -21,7 +21,7 @@ body{
 
 .main-headline {
     font-family: 'Pretendard', sans-serif;
-    font-weight: 600;
+    font-weight: 650;
     color: var(--fh-navy);
     font-size: 1.25rem;
 }
@@ -168,6 +168,7 @@ canvas {
 }
 
 .loading-wrap p {
+    font-family: 'Pretendard', sans-serif;
     font-size: 1.25rem;
     font-weight: 500;
     color: #333;
