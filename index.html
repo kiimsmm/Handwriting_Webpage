@@ -14,6 +14,7 @@
             --fh-border:#dfe3e7;
             --fh-ring:#7aa7ff;
         }
+
         /* 배경 */
         body{
             background: linear-gradient(180deg, #f6f9ff 0%, #eef3ff 50%, #f7faff 100%);
@@ -35,7 +36,7 @@
             }
         }
         .fh-brand{
-            letter-spacing:.2px;
+            letter-spacing: 0.1em
         }
 
         /* 레이아웃 */
@@ -202,14 +203,20 @@
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function (e) {
-                box.classList.remove('dragover');
-                box.innerHTML = '';
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = fileInputId === 'file1' ? '업로드된 이미지 A' : '업로드된 이미지 B';
-                box.appendChild(img);
-                localStorage.setItem(fileInputId === 'file1' ? 'handwritingImageA' : 'handwritingImageB', e.target.result);
-            }
+                const result = e?.target?.result;
+                if (typeof result === 'string') {
+                    box.classList.remove('dragover');
+                    box.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = result;
+                    img.alt = fileInputId === 'file1' ? '업로드된 이미지 A' : '업로드된 이미지 B';
+                    box.appendChild(img);
+                    localStorage.setItem(fileInputId === 'file1' ? 'handwritingImageA' : 'handwritingImageB', result);
+                } else {
+                    // / 드물게 ArrayBuffer/null이 올 경우의 처리 (옵션)
+                    console.warn('FileReader.result is not a string:', result);
+                }
+            };
             reader.readAsDataURL(input.files[0]);
         }
     }

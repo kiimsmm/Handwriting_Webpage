@@ -42,7 +42,7 @@
             color: #333;
         }
 
-        .fh-brand{ letter-spacing:.2px; }
+        .fh-brand{ letter-spacing: 0.1em }
 
         .fh-footer{
             position: fixed;
@@ -87,7 +87,16 @@
     <link rel="shortcut icon" href="images/icon_32.png?v=4" type="image/png">
     <link rel="shortcut icon" href="images/icon_64.png?v=4" type="image/png">
   <script>
-    window.onload = function() {
+      /**
+       * @typedef {Object} VerifyResponse
+       * @property {boolean} ok
+       * @property {string} [reason]
+       * @property {string} [message]
+       * @property {number} cosine_similarity
+       * @property {string} judgment
+       */
+
+      window.onload = function() {
       const imgDataA = localStorage.getItem("handwritingImageA");
       const imgDataB = localStorage.getItem("handwritingImageB");
 
@@ -113,7 +122,7 @@
         })
                 .then(res => res.json())
                 .then(data => {
-                  // 👉 1) 품질 가드 처리
+                  // 1) 품질 가드 처리
                   if (data.ok === false && data.reason === "QUALITY_GUARD") {
                     document.getElementById("score").innerText = "—";
                     document.getElementById("judgment").innerText =
@@ -124,7 +133,7 @@
                     return; // 더 진행하지 않고 종료
                   }
 
-                  // 👉 2) 일반 실패 처리
+                  // 2) 일반 실패 처리
                   if (data.ok === false) {
                     document.getElementById("score").innerText = "—";
                     document.getElementById("judgment").innerText =
@@ -135,7 +144,7 @@
                     return;
                   }
 
-                  // 👉 3) 정상 성공 케이스 (기존 코드 그대로)
+                  // 3) 정상 성공 케이스
                   const sim = parseFloat(data.cosine_similarity).toFixed(4);
                   document.getElementById("score").innerText = `코사인 유사도: ${sim}`;
 
