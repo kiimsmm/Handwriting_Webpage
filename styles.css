@@ -182,6 +182,13 @@ canvas {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
+.result-card p {
+    font-family: 'Pretendard', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 450;
+    color: #333;
+}
+
 .image-placeholder {
     width: 300px;
     height: 150px;
