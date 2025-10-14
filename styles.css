@@ -115,6 +115,21 @@ a {
     background-color: #663399;
     color: white;
 }
+.btnErase{
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 450;
+    padding: 5px 15px;
+    border-radius: 7px;
+    border: 1px solid #555555;
+    background-color: white;
+    color: #555555;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btnErase:hover {
+    background-color: #555555;
+    color: white;
+}
 
 .upload-card{
     width: 280px;
