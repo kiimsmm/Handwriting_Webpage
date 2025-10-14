@@ -65,6 +65,57 @@ body{
     color: var(--fh-navy);
 }
 
+/* 버튼 */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+.btnSample {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 450;
+    padding: 10px 30px;
+    border-radius: 999px;
+    border: 1px solid #007bff;
+    background-color: white;
+    color: #007bff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btnSample:hover {
+    background-color: #007bff;
+    color: white;
+}
+.btnStart {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 450;
+    padding: 10px 30px;
+    border-radius: 999px;
+    border: 1px solid #00ced1;
+    background-color: white;
+    color: #00ced1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btnStart:hover {
+    background-color: #00ced1;
+    color: white;
+}
+.btnWrite{
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 450;
+    padding: 10px 30px;
+    border-radius: 999px;
+    border: 1px solid #663399;
+    background-color: white;
+    color: #663399;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btnWrite:hover {
+    background-color: #663399;
+    color: white;
+}
+
 .upload-card{
     width: 280px;
     border:1px solid var(--fh-border);

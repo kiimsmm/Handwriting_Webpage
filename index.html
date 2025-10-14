@@ -48,7 +48,7 @@
                     </div>
                 </div>
                 <input type="file" id="file1" accept="image/*" onchange="previewImage('file1', 'box1')">
-                <label for="file1" class="btn btn-outline-primary rounded-pill upload-btn">샘플 A 업로드</label>
+                <label for="file1" class="btnSample btn-outline-primary rounded-pill upload-btn">샘플 A 업로드</label>
                 <div class="upload-hint"></div>
             </div>
 
@@ -68,15 +68,15 @@
                     </div>
                 </div>
                 <input type="file" id="file2" accept="image/*" onchange="previewImage('file2', 'box2')">
-                <label for="file2" class="btn btn-outline-primary rounded-pill upload-btn">샘플 B 업로드</label>
+                <label for="file2" class="btnSample btn-outline-primary rounded-pill upload-btn">샘플 B 업로드</label>
                 <div class="upload-hint"></div>
             </div>
         </div>
 
         <!-- 액션 -->
         <div class="fh-actions d-flex justify-content-center gap-5 mt-4">
-            <button class="btn btn-success rounded-pill btn-lg" onclick="startAnalysis()">분석 시작</button>
-            <a href="draw.html" class="btn btn-outline-dark rounded-pill btn-lg">직접 손글씨 쓰기</a>
+            <button class="btnStart" onclick="startAnalysis()">분석 시작</button>
+            <a href="draw.html" class="btnWrite">직접 써보기</a>
         </div>
     </div>
     <footer class="fh-footer">© 2025 FontHacker</footer>
